@@ -21,6 +21,9 @@ observation_shaping:
 
 action_gating:
   enabled_toolsets: [terminal, file]
+  disabled_toolsets: []
+  allow_tools: null
+  deny_tools: []
   delegation_allowed: false
   approval_mode: auto
   pre_tool_call_block_strictness: off
@@ -40,5 +43,7 @@ execution:
   model: kimi-k2.6
   provider: kimi-coding
   base_url: https://api.moonshot.cn/v1
+  api_key_env: HERMES_BENCH_API_KEY
+  strict_runtime: true
   env: docker
-  seeds_per_task: 3
+  seeds_per_task: 1
