@@ -1,0 +1,46 @@
+# =====================================================================
+# Vendored agent repos
+# ---------------------------------------------------------------------
+# Every directory listed here is an external agent repo materialized by
+# scripts/fetch_agents.sh from agents.lock.yaml. They keep their own .git
+# and are NOT tracked at the top level. Add one line per agent.
+# =====================================================================
+/hermes_v-0-10-0/
+
+# =====================================================================
+# Python
+# =====================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.eggs/
+*.egg-info/
+
+# =====================================================================
+# Benchmark artifacts (regenerable; not for git)
+# =====================================================================
+benchmark/results/*.jsonl
+benchmark/results/*.parquet
+benchmark/results/*.csv
+!benchmark/results/.gitkeep
+
+# Sandbox / scratch workspaces created during a run
+benchmark/workspaces/
+benchmark/.cache/
+*.tmp
+
+# =====================================================================
+# Editor / OS
+# =====================================================================
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.swp
+
+# =====================================================================
+# Misc agent state files at top level
+# =====================================================================
+.codex

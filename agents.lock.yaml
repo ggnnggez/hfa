@@ -1,0 +1,33 @@
+# Vendored agent lockfile.
+#
+# Each entry pins one agent repo to an exact commit. scripts/fetch_agents.sh
+# reads this file and clones / fetches / checks out every agent into its
+# `path` (relative to repo root). The agent dirs themselves are gitignored
+# at the top level, so this lockfile is the only thing in our git history
+# that records "which version of hermes the benchmark was run against".
+#
+# When upgrading an agent:
+#   1. cd <path> && git fetch && git checkout <new-sha>
+#   2. update `commit` (and optionally `ref` / `fetched_at`) below
+#   3. re-run any docs that quote line numbers from the agent source
+#   4. commit the lockfile change with a message explaining the bump
+#
+# Schema (per agent):
+#   path        directory under repo root where the agent is materialized
+#   repo        git remote URL
+#   ref         human-readable tag or branch the commit was taken from
+#   commit      40-char SHA — the source of truth for reproducibility
+#   fetched_at  YYYY-MM-DD when the commit was last refreshed
+#   notes       freeform; especially: which docs/scripts depend on this SHA
+
+agents:
+  hermes:
+    path: hermes_v-0-10-0
+    repo: https://github.com/NousResearch/hermes-agent
+    ref: v2026.4.16
+    commit: 1dd6b5d5fb94cac59e93388f9aeee6bc365b8f42
+    fetched_at: 2026-04-23
+    notes: |
+      docs/hermes-harness-taxonomy.md cites file:line references against
+      this commit. Bumping requires re-validating every :linenum link in
+      that doc.

@@ -1,0 +1,44 @@
+# Baseline minimal harness configuration.
+#
+# This is the hand-picked "minimal reasonable" baseline from which ablation
+# variants will diverge by changing one knob at a time. Values are chosen to
+# be conservative and reproducible: no prefetch / compression / fallback, one
+# model, headless approval.
+#
+# Knob names mirror the three control categories in
+# docs/hermes-harness-taxonomy.md so ablations can be labeled by category.
+
+observation_shaping:
+  memory_prefetch_enabled: false
+  memory_prefetch_top_k: 0
+  context_compression_enabled: false
+  context_compression_threshold: null
+  context_compression_target_ratio: null
+  pre_llm_call_injection: false
+  session_context_injection: false
+  tool_schema_narrowing: false
+  prefill_message_count: 0
+
+action_gating:
+  enabled_toolsets: [terminal, file]
+  delegation_allowed: false
+  approval_mode: auto
+  pre_tool_call_block_strictness: off
+  clarify_enabled: false
+  disable_high_risk_tools: false
+
+transition_control:
+  max_iterations: 30
+  turn_budget_chars: 50000
+  retry_max: 2
+  fallback_enabled: false
+  timeout_per_tool_sec: 60
+  cleanup_granularity: per_session
+  concurrent_tool_execution: false
+
+execution:
+  model: kimi-k2.6
+  provider: kimi-coding
+  base_url: https://api.moonshot.cn/v1
+  env: docker
+  seeds_per_task: 3
