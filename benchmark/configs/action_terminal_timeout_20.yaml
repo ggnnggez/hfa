@@ -1,7 +1,9 @@
-# Action Gating ablation: expose only safe read/search file tools.
+# Two-axis ablation point: terminal-only action space with shorter timeout.
 #
-# This config tests whether F1 code QA can keep quality while removing shell
-# execution and file mutation actions from the agent action space.
+# This combines the Action Gating terminal-only variant with the Transition
+# Control timeout_per_tool_sec=20 variant. Together with baseline,
+# action_terminal_only, and transition_timeout_20, it forms a small 2x2 grid:
+# action space (baseline vs terminal-only) x terminal timeout (60s vs 20s).
 
 observation_shaping:
   memory_prefetch_enabled: false
@@ -15,9 +17,9 @@ observation_shaping:
   prefill_message_count: 0
 
 action_gating:
-  enabled_toolsets: [file]
+  enabled_toolsets: [terminal]
   disabled_toolsets: []
-  allow_tools: [read_file, search_files]
+  allow_tools: [terminal, process]
   deny_tools: []
   delegation_allowed: false
   approval_mode: auto
@@ -30,7 +32,7 @@ transition_control:
   turn_budget_chars: 50000
   retry_max: 2
   fallback_enabled: false
-  timeout_per_tool_sec: 60
+  timeout_per_tool_sec: 20
   cleanup_granularity: per_session
   concurrent_tool_execution: false
 

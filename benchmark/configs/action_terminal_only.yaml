@@ -41,4 +41,4 @@ execution:
   api_key_env: HERMES_BENCH_API_KEY
   strict_runtime: true
   env: docker
-  seeds_per_task: 3
+  seeds_per_task: 5

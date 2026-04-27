@@ -24,6 +24,16 @@ WORKSPACE_ROOT = BENCHMARK_ROOT.parent
 HERMES_ROOT = WORKSPACE_ROOT / "hermes_v-0-10-0"
 
 
+BENCHMARK_REPO_SCOPE_PROMPT = """\
+Benchmark repository-scope rule:
+The task is already running at the target repository root. Inspect files
+relative to the current working directory. If unsure, run pwd and ls first.
+Do not search /mnt, /mnt/c, /mnt/d, /home, /, or parent directories unless the
+task explicitly asks for files outside this repository. Prefer bounded commands
+such as cat, grep, sed, rg, or find . -maxdepth N for repository-local code QA.
+"""
+
+
 @contextmanager
 def _temporary_env(updates: dict[str, str]) -> Iterator[None]:
     old_values = {key: os.environ.get(key) for key in updates}
@@ -145,6 +155,17 @@ def _execution_runtime(execution: dict) -> dict:
         "strict_runtime": bool(strict_runtime),
         "sources": sources,
     }
+
+
+def _tool_timeout_seconds(transition: dict) -> int:
+    value = transition.get("timeout_per_tool_sec")
+    if value is None:
+        return 180
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return 180
+    return max(1, parsed)
 
 
 @contextmanager
@@ -289,6 +310,7 @@ class HermesDirectRunner:
         base_url = runtime["base_url"]
         api_key = runtime["api_key"]
         provider = runtime["provider"]
+        tool_timeout = _tool_timeout_seconds(transition)
 
         agent = None
         started_at = time.time()
@@ -311,6 +333,15 @@ class HermesDirectRunner:
             "api_key_source": runtime["sources"].get("api_key"),
             "sources": {k: v for k, v in runtime["sources"].items() if k != "api_key"},
             "strict_runtime": runtime["strict_runtime"],
+        })
+        events.append({
+            "type": "benchmark_scope_prompt",
+            "message": BENCHMARK_REPO_SCOPE_PROMPT.strip(),
+        })
+        events.append({
+            "type": "terminal_timeout_policy",
+            "timeout_per_tool_sec": tool_timeout,
+            "source": "config.transition_control.timeout_per_tool_sec",
         })
 
         if runtime["strict_runtime"] and base_url and not api_key:
@@ -353,6 +384,7 @@ class HermesDirectRunner:
 
         with _temporary_env({
             "TERMINAL_CWD": str(repo_path),
+            "TERMINAL_TIMEOUT": str(tool_timeout),
             "HERMES_QUIET": "1",
         }), _temporary_cwd(repo_path):
             try:
@@ -372,6 +404,7 @@ class HermesDirectRunner:
                             provider=provider,
                             model=model,
                             max_iterations=int(transition.get("max_iterations") or 30),
+                            ephemeral_system_prompt=BENCHMARK_REPO_SCOPE_PROMPT,
                             enabled_toolsets=gate_policy["enabled_toolsets"],
                             disabled_toolsets=gate_policy["disabled_toolsets"],
                             quiet_mode=True,

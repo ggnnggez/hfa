@@ -1,7 +1,9 @@
-# Action Gating ablation: expose only safe read/search file tools.
+# Transition Control ablation: baseline action space with shorter terminal timeout.
 #
-# This config tests whether F1 code QA can keep quality while removing shell
-# execution and file mutation actions from the agent action space.
+# This config keeps the baseline terminal+file action space, but reduces the
+# terminal default command timeout from 60s to 20s via HermesDirectRunner's
+# TERMINAL_TIMEOUT mapping. It tests whether shorter tool timeouts trim latency
+# tails without hurting F1 code QA quality.
 
 observation_shaping:
   memory_prefetch_enabled: false
@@ -11,17 +13,17 @@ observation_shaping:
   context_compression_target_ratio: null
   pre_llm_call_injection: false
   session_context_injection: false
-  tool_schema_narrowing: true
+  tool_schema_narrowing: false
   prefill_message_count: 0
 
 action_gating:
-  enabled_toolsets: [file]
+  enabled_toolsets: [terminal, file]
   disabled_toolsets: []
-  allow_tools: [read_file, search_files]
+  allow_tools: null
   deny_tools: []
   delegation_allowed: false
   approval_mode: auto
-  pre_tool_call_block_strictness: schema
+  pre_tool_call_block_strictness: off
   clarify_enabled: false
   disable_high_risk_tools: false
 
@@ -30,7 +32,7 @@ transition_control:
   turn_budget_chars: 50000
   retry_max: 2
   fallback_enabled: false
-  timeout_per_tool_sec: 60
+  timeout_per_tool_sec: 20
   cleanup_granularity: per_session
   concurrent_tool_execution: false
 
