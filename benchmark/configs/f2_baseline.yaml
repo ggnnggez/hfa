@@ -1,0 +1,46 @@
+# F2 bug-fix baseline.
+#
+# This starts conservative: one seed over the local F2 fixtures, full terminal
+# and file tools, no delegation, no fallback. The goal is to validate the
+# mutable workspace -> patch -> test oracle loop before scaling seeds or
+# moving to SWE-bench Lite instances.
+
+observation_shaping:
+  memory_prefetch_enabled: false
+  memory_prefetch_top_k: 0
+  context_compression_enabled: false
+  context_compression_threshold: null
+  context_compression_target_ratio: null
+  pre_llm_call_injection: false
+  session_context_injection: false
+  tool_schema_narrowing: false
+  prefill_message_count: 0
+
+action_gating:
+  enabled_toolsets: [terminal, file]
+  disabled_toolsets: []
+  allow_tools: null
+  deny_tools: []
+  delegation_allowed: false
+  approval_mode: auto
+  pre_tool_call_block_strictness: off
+  clarify_enabled: false
+  disable_high_risk_tools: false
+
+transition_control:
+  max_iterations: 30
+  turn_budget_chars: 50000
+  retry_max: 2
+  fallback_enabled: false
+  timeout_per_tool_sec: 30
+  cleanup_granularity: per_session
+  concurrent_tool_execution: false
+
+execution:
+  model: kimi-k2.6
+  provider: kimi-coding
+  base_url: https://api.moonshot.cn/v1
+  api_key_env: HERMES_BENCH_API_KEY
+  strict_runtime: true
+  env: local
+  seeds_per_task: 1

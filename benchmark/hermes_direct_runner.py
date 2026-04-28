@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import sys
 import time
 import uuid
@@ -22,6 +23,7 @@ from runner import RunResult
 BENCHMARK_ROOT = Path(__file__).resolve().parent
 WORKSPACE_ROOT = BENCHMARK_ROOT.parent
 HERMES_ROOT = WORKSPACE_ROOT / "hermes_v-0-10-0"
+WORKSPACE_TMP_ROOT = Path(os.getenv("HFA_BENCH_WORKSPACE_ROOT", "/tmp/hfa-bench-workspaces"))
 
 
 BENCHMARK_REPO_SCOPE_PROMPT = """\
@@ -168,6 +170,36 @@ def _tool_timeout_seconds(transition: dict) -> int:
     return max(1, parsed)
 
 
+def _resolve_workspace_source(value: object) -> Path | None:
+    if not value:
+        return None
+    source = Path(str(value))
+    if not source.is_absolute():
+        source = WORKSPACE_ROOT / source
+    return source
+
+
+def _prepare_task_workspace(task: dict) -> Path:
+    workspace_source = _resolve_workspace_source(task.get("workspace_source"))
+    if workspace_source is None:
+        repo_root = task.get("repo_root") or str(HERMES_ROOT)
+        repo_path = Path(repo_root)
+        if not repo_path.is_absolute():
+            repo_path = WORKSPACE_ROOT / repo_path
+        return repo_path
+
+    if not workspace_source.exists():
+        raise FileNotFoundError(f"workspace_source does not exist: {workspace_source}")
+    if not workspace_source.is_dir():
+        raise NotADirectoryError(f"workspace_source is not a directory: {workspace_source}")
+
+    WORKSPACE_TMP_ROOT.mkdir(parents=True, exist_ok=True)
+    task_id = str(task.get("id") or "task")
+    destination = WORKSPACE_TMP_ROOT / f"{task_id}-{uuid.uuid4().hex[:8]}"
+    shutil.copytree(workspace_source, destination)
+    return destination
+
+
 @contextmanager
 def _temporary_tool_schema_gate(
     run_agent_module: object,
@@ -300,11 +332,28 @@ class HermesDirectRunner:
 
         gate_policy = _action_gate_policy(action)
         runtime = _execution_runtime(execution)
+        started_at = time.time()
 
-        repo_root = task.get("repo_root") or str(HERMES_ROOT)
-        repo_path = Path(repo_root)
-        if not repo_path.is_absolute():
-            repo_path = WORKSPACE_ROOT / repo_path
+        try:
+            repo_path = _prepare_task_workspace(task)
+        except Exception as exc:
+            ended_at = time.time()
+            trajectory = {
+                "started_at": started_at,
+                "ended_at": ended_at,
+                "usage": {"input_tokens": 0, "output_tokens": 0, "reasoning_tokens": 0},
+                "events": [{"type": "workspace_error", "message": str(exc)}],
+                "stop_reason": "runner_error",
+                "messages": [],
+                "tool_calls": [],
+                "final_message": f"[runner_error] {exc}",
+                "api_calls": 0,
+                "model": runtime["model"],
+                "provider": runtime["provider"],
+                "base_url": runtime["base_url"],
+                "runtime": {},
+            }
+            return RunResult(trajectory=trajectory, workspace_path=None)
 
         model = runtime["model"]
         base_url = runtime["base_url"]
@@ -313,7 +362,6 @@ class HermesDirectRunner:
         tool_timeout = _tool_timeout_seconds(transition)
 
         agent = None
-        started_at = time.time()
         messages: list[dict] = []
         final_message = ""
         events: list[dict] = []
