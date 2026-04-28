@@ -36,6 +36,21 @@ such as cat, grep, sed, rg, or find . -maxdepth N for repository-local code QA.
 """
 
 
+class TeeStringIO(StringIO):
+    def __init__(self, stream):
+        super().__init__()
+        self._stream = stream
+
+    def write(self, value):
+        self._stream.write(value)
+        self._stream.flush()
+        return super().write(value)
+
+    def flush(self):
+        self._stream.flush()
+        return super().flush()
+
+
 @contextmanager
 def _temporary_env(updates: dict[str, str]) -> Iterator[None]:
     old_values = {key: os.environ.get(key) for key in updates}
@@ -240,8 +255,9 @@ def _temporary_tool_schema_gate(
 
 @contextmanager
 def _capture_stdio() -> Iterator[tuple[StringIO, StringIO]]:
-    stdout = StringIO()
-    stderr = StringIO()
+    live_log = os.getenv("HFA_BENCH_LIVE_LOG") == "1"
+    stdout = TeeStringIO(sys.__stdout__) if live_log else StringIO()
+    stderr = TeeStringIO(sys.__stderr__) if live_log else StringIO()
     old_stdout = sys.stdout
     old_stderr = sys.stderr
     try:
@@ -436,6 +452,9 @@ class HermesDirectRunner:
             "HERMES_QUIET": "1",
         }), _temporary_cwd(repo_path):
             try:
+                live_log = os.getenv("HFA_BENCH_LIVE_LOG") == "1"
+                if live_log:
+                    print(f"[phase] agent_init_start task={task.get('id', 'task')} cwd={repo_path}")
                 _ensure_hermes_import_path()
                 import run_agent
                 from run_agent import AIAgent
@@ -465,6 +484,8 @@ class HermesDirectRunner:
                             platform="benchmark",
                         )
                     _record_captured_output(events, "agent_init", captured)
+                    if live_log:
+                        print(f"[phase] agent_run_start task={task.get('id', 'task')}")
                     events.append({
                         "type": "action_gate_exposure",
                         "enabled_tools": sorted(getattr(agent, "valid_tool_names", set())),
@@ -485,6 +506,8 @@ class HermesDirectRunner:
                             task_id=f"bench-{task.get('id', 'task')}",
                         )
                     _record_captured_output(events, "run_conversation", captured)
+                    if live_log:
+                        print(f"[phase] agent_run_done task={task.get('id', 'task')}")
 
                     messages = result.get("messages") or []
                     final_message = result.get("final_response") or ""
