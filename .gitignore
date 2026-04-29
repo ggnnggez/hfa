@@ -31,6 +31,8 @@ benchmark/results/*.csv
 # Sandbox / scratch workspaces created during a run
 benchmark/workspaces/
 benchmark/.cache/
+.bench/
+.env.bench
 *.tmp
 
 # =====================================================================
