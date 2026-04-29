@@ -34,6 +34,15 @@ API keys. Set the key in the shell or through your secret manager:
 export HERMES_BENCH_API_KEY='...'
 ```
 
+`.env.bench` bridges that key into Hermes auxiliary provider variables at
+runtime:
+
+```bash
+KIMI_CN_API_KEY=${HERMES_BENCH_API_KEY}
+KIMI_API_KEY=${HERMES_BENCH_API_KEY}
+KIMI_BASE_URL=https://api.moonshot.cn/v1
+```
+
 Run the SWE-bench Lite smoke:
 
 ```bash

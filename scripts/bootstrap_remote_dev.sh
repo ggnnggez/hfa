@@ -84,6 +84,13 @@ export HFA_BENCH_WORKSPACE_ROOT="${BENCH_ROOT}/workspaces"
 export HF_HOME="${BENCH_ROOT}/hf-cache"
 export UV_CACHE_DIR="${BENCH_ROOT}/uv-cache"
 export HFA_SWEBENCH_EVAL_TIMEOUT_SEC="\${HFA_SWEBENCH_EVAL_TIMEOUT_SEC:-7200}"
+
+# HFA reads HERMES_BENCH_API_KEY for the primary model. Hermes auxiliary
+# routing reads provider-native env vars, so bridge the benchmark key without
+# writing a secret into this file.
+export KIMI_CN_API_KEY="\${KIMI_CN_API_KEY:-\${HERMES_BENCH_API_KEY:-}}"
+export KIMI_API_KEY="\${KIMI_API_KEY:-\${HERMES_BENCH_API_KEY:-}}"
+export KIMI_BASE_URL="\${KIMI_BASE_URL:-https://api.moonshot.cn/v1}"
 EOF
 
 log "Materializing pinned agent repos"
