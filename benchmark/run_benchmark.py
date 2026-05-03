@@ -109,6 +109,9 @@ def load_runner(kind: str):
     if kind == "hermes_direct":
         from hermes_direct_runner import HermesDirectRunner
         return HermesDirectRunner()
+    if kind == "deer_flow":
+        from deer_flow_runner import DeerFlowRunner
+        return DeerFlowRunner()
     raise NotImplementedError(f"runner '{kind}' not wired up yet")
 
 

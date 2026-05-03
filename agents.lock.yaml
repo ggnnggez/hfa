@@ -31,3 +31,16 @@ agents:
       docs/hermes-harness-taxonomy.md cites file:line references against
       this commit. Bumping requires re-validating every :linenum link in
       that doc.
+  deer_flow:
+    path: deer_flow_v-2-0
+    repo: https://github.com/bytedance/deer-flow
+    ref: v2.0-m1
+    commit: 979a461af5bd4e61ec1654c99f3ec9589a2edbb3
+    fetched_at: 2026-05-02
+    notes: |
+      DeerFlow 2.0 is a ground-up rewrite (LangGraph-based super-agent
+      harness). Embedded entry: deerflow.client.DeerFlowClient. The Python
+      package lives at backend/packages/harness/deerflow; benchmark/
+      deer_flow_runner.py invokes it out-of-process via `uv run --project
+      deer_flow_v-2-0/backend` so its langchain/langgraph/fastapi deps stay
+      isolated from the Hermes runtime env.

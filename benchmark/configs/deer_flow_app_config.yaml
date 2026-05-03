@@ -1,0 +1,70 @@
+config_version: 6
+log_level: warning
+
+token_usage:
+  enabled: true
+
+models:
+  - name: kimi-k2.6
+    display_name: Kimi K2.6 (benchmark)
+    use: langchain_openai:ChatOpenAI
+    model: kimi-k2-0905-preview
+    base_url: $HFA_BENCH_KIMI_BASE_URL
+    api_key: $HERMES_BENCH_API_KEY
+    request_timeout: 600.0
+    max_retries: 2
+    max_tokens: 4096
+    temperature: 0.0
+
+tool_groups:
+  - name: file:read
+
+tools:
+  - name: ls
+    group: file:read
+    use: deerflow.sandbox.tools:ls_tool
+  - name: read_file
+    group: file:read
+    use: deerflow.sandbox.tools:read_file_tool
+  - name: glob
+    group: file:read
+    use: deerflow.sandbox.tools:glob_tool
+    max_results: 200
+  - name: grep
+    group: file:read
+    use: deerflow.sandbox.tools:grep_tool
+    max_results: 100
+
+tool_search:
+  enabled: false
+
+uploads:
+  pdf_converter: auto
+
+sandbox:
+  use: deerflow.sandbox.local:LocalSandboxProvider
+  allow_host_bash: false
+  bash_output_max_chars: 20000
+  read_file_output_max_chars: 50000
+  ls_output_max_chars: 20000
+  mounts:
+    - host_path: $HFA_BENCH_REPO_MOUNT
+      container_path: /mnt/repo
+      read_only: true
+
+skills:
+  path: ""
+  container_path: /mnt/skills
+
+title:
+  enabled: false
+
+summarization:
+  enabled: false
+
+memory:
+  enabled: false
+  injection_enabled: false
+
+skill_evolution:
+  enabled: false
