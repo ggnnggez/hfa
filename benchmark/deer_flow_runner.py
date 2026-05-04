@@ -252,7 +252,6 @@ class DeerFlowRunner:
             completed = subprocess.run(
                 cmd,
                 input=json.dumps(request),
-                capture_output=stderr_target is subprocess.PIPE,
                 stderr=stderr_target if stderr_target is not subprocess.PIPE else subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 text=True,

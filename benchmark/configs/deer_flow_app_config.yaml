@@ -8,13 +8,18 @@ models:
   - name: kimi-k2.6
     display_name: Kimi K2.6 (benchmark)
     use: langchain_openai:ChatOpenAI
-    model: kimi-k2-0905-preview
+    model: kimi-k2.6
     base_url: $HFA_BENCH_KIMI_BASE_URL
     api_key: $HERMES_BENCH_API_KEY
     request_timeout: 600.0
     max_retries: 2
     max_tokens: 4096
-    temperature: 0.0
+    temperature: 0.6
+    stream_usage: true
+    when_thinking_disabled:
+      extra_body:
+        thinking:
+          type: disabled
 
 tool_groups:
   - name: file:read
